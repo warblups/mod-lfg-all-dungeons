@@ -7,7 +7,6 @@ Module AzerothCore permettant l'accès à **tous les donjons via le système LFG
 ## Fonctionnalités
 
 - Suppression des restrictions de niveau min/max dans le LFG pour tous les types de donjons (Normal, Héroïque, Raid, Aléatoire)
-- Suppression optionnelle des restrictions d'extension (BC, WotLK)
 - Message d'information au joueur quand il rejoint la file
 - Commandes GM pour recharger la config ou forcer le patch
 - Configuration complète via `.conf`
@@ -36,6 +35,8 @@ make -j$(nproc)
 mysql -u root -p acore_world < sql/world/mod_lfg_all_dungeons_patch.sql
 ```
 
+> Le SQL cible la table **`dungeon_access_template`** (121 entrées) qui contrôle les colonnes `min_level` / `max_level` pour chaque donjon et chaque difficulté.
+
 ### 4. Copier la configuration
 
 ```bash
@@ -52,8 +53,7 @@ cp conf/mod_lfg_all_dungeons.conf.dist \
 | Option | Défaut | Description |
 |---|---|---|
 | `LFGAllDungeons.Enable` | `1` | Active/désactive le module |
-| `LFGAllDungeons.BypassLevel` | `1` | Ignore les restrictions de niveau |
-| `LFGAllDungeons.BypassExpansion` | `1` | Ignore les restrictions d'extension |
+| `LFGAllDungeons.BypassLevel` | `1` | Ignore les restrictions de niveau dans `dungeon_access_template` |
 | `LFGAllDungeons.Announce` | `1` | Message au joueur quand il rejoint la file |
 
 ---
@@ -64,7 +64,7 @@ cp conf/mod_lfg_all_dungeons.conf.dist \
 |---|---|---|
 | `.lfgall status` | Joueur | Affiche l'état actuel du module |
 | `.lfgall reload` | Administrateur | Recharge la configuration |
-| `.lfgall patch` | Administrateur | Réapplique le patch SQL en BDD |
+| `.lfgall patch` | Administrateur | Réapplique le patch sur `dungeon_access_template` |
 
 ---
 
@@ -77,7 +77,7 @@ cp conf/mod_lfg_all_dungeons.conf.dist \
 
 ## Restaurer les restrictions originales
 
-Si vous souhaitez revenir aux paramètres Blizzard, restaurez la table `lfg_dungeon_template` depuis votre backup AzerothCore ou remettez manuellement les valeurs originales.
+Pour revenir aux valeurs Blizzard, restaurez la table `dungeon_access_template` depuis votre backup AzerothCore ou remettez manuellement les `min_level` / `max_level` d'origine.
 
 ---
 
