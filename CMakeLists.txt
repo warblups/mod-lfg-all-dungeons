@@ -1,12 +1,20 @@
-CollectSourceFiles(
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-    PRIVATE_SOURCES
-)
+-- ============================================================
+-- mod-lfg-all-dungeons : SQL d'initialisation
+-- À appliquer sur la base world d'AzerothCore
+-- ============================================================
 
-if (SC_UNI_BUILD)
-    set(SCRIPTS_CURRENT_LOADER "${CMAKE_CURRENT_SOURCE_DIR}/src/mod_lfg_all_dungeons.cpp")
-endif()
+-- Sauvegarde optionnelle de l'état original
+-- (décommenter si vous souhaitez pouvoir revenir en arrière)
+-- CREATE TABLE IF NOT EXISTS `mod_lfg_backup` LIKE `lfg_dungeon_template`;
+-- INSERT INTO `mod_lfg_backup` SELECT * FROM `lfg_dungeon_template`;
 
-CU_ADD_HOOK(GAME_INCLUDES "${CMAKE_CURRENT_SOURCE_DIR}/src")
+-- Supprime les restrictions de niveau min/max pour TOUS les donjons
+-- (Normal, Héroïque, Raid — difficulty 0 = normal, 1 = héroïque, etc.)
+UPDATE `dungeon_access_template`
+SET `min_level` = 1,
+    `max_level` = 80;
 
-target_sources(game PRIVATE ${PRIVATE_SOURCES})
+-- Vérification rapide
+SELECT `id`, `map_id`, `difficulty`, `min_level`, `max_level`, `min_avg_item_level`, `comment`
+FROM `dungeon_access_template`
+ORDER BY `map_id`, `difficulty`;
