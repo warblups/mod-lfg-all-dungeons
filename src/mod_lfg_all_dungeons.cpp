@@ -6,32 +6,23 @@
 #include "ChatCommand.h"
 #include "DatabaseEnv.h"
 
-// ============================================================
-// mod-lfg-all-dungeons
-// Description : Permet l'accès à tous les donjons via le LFG
-//               sans restriction de niveau min/max.
-// ============================================================
-
 using namespace Acore::ChatCommands;
 
-bool g_ModEnabled       = true;
-bool g_BypassLevelCheck = true;
-bool g_AnnounceOnJoin   = true;
+namespace LFGAll
+{
+    bool Enabled       = true;
+    bool BypassLevel   = true;
+    bool Announce      = true;
+}
 
-// ----------------------------------------------------------
-// Patch BDD
-// ----------------------------------------------------------
 static void ApplyPatch()
 {
     WorldDatabase.Execute(
-        "UPDATE dungeon_access_template SET min_level = 1, max_level = 80"
+        "UPDATE dungeon_access_template SET min_level = 1, max_level = 80 WHERE min_level != 1 OR max_level != 80"
     );
-    LOG_INFO("module", "mod-lfg-all-dungeons : patch dungeon_access_template appliqué.");
+    LOG_INFO("module", "mod-lfg-all-dungeons : patch appliqué.");
 }
 
-// ----------------------------------------------------------
-// WorldScript : chargement config + patch au démarrage
-// ----------------------------------------------------------
 class LFGAllDungeonsWorldScript : public WorldScript
 {
 public:
@@ -39,26 +30,21 @@ public:
 
     void OnBeforeConfigLoad(bool /*reload*/) override
     {
-        g_ModEnabled       = sConfigMgr->GetOption<bool>("LFGAllDungeons.Enable",      true);
-        g_BypassLevelCheck = sConfigMgr->GetOption<bool>("LFGAllDungeons.BypassLevel", true);
-        g_AnnounceOnJoin   = sConfigMgr->GetOption<bool>("LFGAllDungeons.Announce",    true);
+        LFGAll::Enabled     = sConfigMgr->GetOption<bool>("LFGAllDungeons.Enable", true);
+        LFGAll::BypassLevel = sConfigMgr->GetOption<bool>("LFGAllDungeons.BypassLevel", true);
+        LFGAll::Announce    = sConfigMgr->GetOption<bool>("LFGAllDungeons.Announce", true);
 
-        LOG_INFO("module", "mod-lfg-all-dungeons : Enable={} BypassLevel={} Announce={}",
-            g_ModEnabled, g_BypassLevelCheck, g_AnnounceOnJoin);
+        LOG_INFO("module", "mod-lfg-all-dungeons : Enable={} Bypass={} Announce={}",
+            LFGAll::Enabled, LFGAll::BypassLevel, LFGAll::Announce);
     }
 
     void OnStartup() override
     {
-        if (!g_ModEnabled || !g_BypassLevelCheck)
-            return;
-
-        ApplyPatch();
+        if (LFGAll::Enabled && LFGAll::BypassLevel)
+            ApplyPatch();
     }
 };
 
-// ----------------------------------------------------------
-// PlayerScript : message à la connexion
-// ----------------------------------------------------------
 class LFGAllDungeonsPlayerScript : public PlayerScript
 {
 public:
@@ -66,18 +52,15 @@ public:
 
     void OnPlayerLogin(Player* player) override
     {
-        if (!g_ModEnabled || !g_AnnounceOnJoin || !player)
-            return;
-
-        ChatHandler(player->GetSession()).PSendSysMessage(
-            "|cff00ff00[LFG Unlock]|r Tous les donjons sont accessibles via le LFG "
-            "sans restriction de niveau.");
+        if (LFGAll::Enabled && LFGAll::Announce && player)
+        {
+            ChatHandler(player->GetSession()).PSendSysMessage(
+                "|cff00ff00[LFG Unlock]|r Tous les donjons sont accessibles via le LFG sans restriction de niveau."
+            );
+        }
     }
 };
 
-// ----------------------------------------------------------
-// CommandScript : .lfgall status / reload / patch
-// ----------------------------------------------------------
 class LFGAllDungeonsCommandScript : public CommandScript
 {
 public:
@@ -85,16 +68,16 @@ public:
 
     ChatCommandTable GetCommands() const override
     {
-        static ChatCommandTable lfgAllSub =
+        static ChatCommandTable sub =
         {
-            { "reload", HandleReload, SEC_ADMINISTRATOR, Console::No  },
-            { "patch",  HandlePatch,  SEC_ADMINISTRATOR, Console::No  },
-            { "status", HandleStatus, SEC_PLAYER,        Console::No  },
+            { "reload", HandleReload, SEC_ADMINISTRATOR, Console::No },
+            { "patch",  HandlePatch,  SEC_ADMINISTRATOR, Console::No },
+            { "status", HandleStatus, SEC_PLAYER,        Console::No },
         };
 
         static ChatCommandTable root =
         {
-            { "lfgall", lfgAllSub },
+            { "lfgall", sub },
         };
 
         return root;
@@ -102,9 +85,9 @@ public:
 
     static bool HandleReload(ChatHandler* handler)
     {
-        g_ModEnabled       = sConfigMgr->GetOption<bool>("LFGAllDungeons.Enable",      true);
-        g_BypassLevelCheck = sConfigMgr->GetOption<bool>("LFGAllDungeons.BypassLevel", true);
-        g_AnnounceOnJoin   = sConfigMgr->GetOption<bool>("LFGAllDungeons.Announce",    true);
+        LFGAll::Enabled     = sConfigMgr->GetOption<bool>("LFGAllDungeons.Enable", true);
+        LFGAll::BypassLevel = sConfigMgr->GetOption<bool>("LFGAllDungeons.BypassLevel", true);
+        LFGAll::Announce    = sConfigMgr->GetOption<bool>("LFGAllDungeons.Announce", true);
 
         handler->PSendSysMessage("|cff00ff00[LFGAll]|r Configuration rechargée.");
         return true;
@@ -112,30 +95,27 @@ public:
 
     static bool HandlePatch(ChatHandler* handler)
     {
-        if (!g_ModEnabled)
+        if (!LFGAll::Enabled)
         {
-            handler->PSendSysMessage("|cffff0000[LFGAll]|r Module désactivé dans la config.");
+            handler->PSendSysMessage("|cffff0000[LFGAll]|r Module désactivé.");
             return true;
         }
 
         ApplyPatch();
-        handler->PSendSysMessage("|cff00ff00[LFGAll]|r Patch appliqué sur dungeon_access_template.");
+        handler->PSendSysMessage("|cff00ff00[LFGAll]|r Patch appliqué.");
         return true;
     }
 
     static bool HandleStatus(ChatHandler* handler)
     {
         handler->PSendSysMessage("|cff00ff00[LFGAll] Statut :|r");
-        handler->PSendSysMessage("  Activé        : %s", g_ModEnabled       ? "|cff00ff00Oui|r" : "|cffff0000Non|r");
-        handler->PSendSysMessage("  Bypass niveau : %s", g_BypassLevelCheck ? "|cff00ff00Oui|r" : "|cffff0000Non|r");
-        handler->PSendSysMessage("  Annonce login : %s", g_AnnounceOnJoin   ? "|cff00ff00Oui|r" : "|cffff0000Non|r");
+        handler->PSendSysMessage("  Activé        : %s", LFGAll::Enabled     ? "|cff00ff00Oui|r" : "|cffff0000Non|r");
+        handler->PSendSysMessage("  Bypass niveau : %s", LFGAll::BypassLevel ? "|cff00ff00Oui|r" : "|cffff0000Non|r");
+        handler->PSendSysMessage("  Annonce login : %s", LFGAll::Announce    ? "|cff00ff00Oui|r" : "|cffff0000Non|r");
         return true;
     }
 };
 
-// ----------------------------------------------------------
-// Enregistrement
-// ----------------------------------------------------------
 void Addmod_lfg_all_dungeonsScripts()
 {
     new LFGAllDungeonsWorldScript();
