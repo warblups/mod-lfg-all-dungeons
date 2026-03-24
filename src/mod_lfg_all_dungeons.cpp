@@ -5,8 +5,8 @@
 #include "Config.h"
 #include "Chat.h"
 #include "DatabaseEnv.h"
-#include "RBAC.h"
 #include "ObjectMgr.h"
+#include "AccountMgr.h"
 
 // ============================================================
 // mod-lfg-all-dungeons
