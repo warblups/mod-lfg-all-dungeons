@@ -136,7 +136,7 @@ public:
 // ----------------------------------------------------------
 // Enregistrement
 // ----------------------------------------------------------
-void AddSC_mod_lfg_all_dungeons()
+void Addmod_lfg_all_dungeonsScripts()
 {
     new LFGAllDungeonsWorldScript();
     new LFGAllDungeonsPlayerScript();
