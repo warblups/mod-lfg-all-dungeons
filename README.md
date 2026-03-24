@@ -2,6 +2,8 @@
 
 Module AzerothCore permettant l'accès à **tous les donjons via le système LFG (Looking For Group)** sans restriction de niveau minimum ou maximum.
 
+> 🇬🇧 [English version below](#english)
+
 ---
 
 ## Fonctionnalités
@@ -84,3 +86,97 @@ Pour revenir aux valeurs Blizzard, restaurez la table `dungeon_access_template` 
 ## Licence
 
 MIT — libre d'utilisation et de modification.
+
+---
+---
+
+# English
+
+<a name="english"></a>
+
+# mod-lfg-all-dungeons
+
+AzerothCore module that allows access to **all dungeons through the LFG (Looking For Group) system** regardless of the player's level.
+
+---
+
+## Features
+
+- Removes min/max level restrictions in LFG for all dungeon types (Normal, Heroic, Raid, Random)
+- In-game notification to the player when joining the queue
+- GM commands to reload the config or force re-apply the patch
+- Fully configurable via `.conf` file
+
+---
+
+## Installation
+
+### 1. Copy the module
+
+```bash
+cp -r mod-lfg-all-dungeons /path/to/azerothcore/modules/
+```
+
+### 2. Recompile AzerothCore
+
+```bash
+cd /path/to/azerothcore/build
+cmake .. -DMODULES_FOLDER=../modules
+make -j$(nproc)
+```
+
+### 3. Apply the SQL patch
+
+```bash
+mysql -u root -p acore_world < sql/world/mod_lfg_all_dungeons_patch.sql
+```
+
+> The SQL targets the **`dungeon_access_template`** table (121 rows), which controls the `min_level` / `max_level` columns for each dungeon and difficulty.
+
+### 4. Copy the configuration file
+
+```bash
+cp conf/mod_lfg_all_dungeons.conf.dist \
+   /path/to/worldserver/configs/mod_lfg_all_dungeons.conf
+```
+
+### 5. Restart the worldserver
+
+---
+
+## Configuration (`mod_lfg_all_dungeons.conf`)
+
+| Option | Default | Description |
+|---|---|---|
+| `LFGAllDungeons.Enable` | `1` | Enable or disable the module |
+| `LFGAllDungeons.BypassLevel` | `1` | Bypass level restrictions in `dungeon_access_template` |
+| `LFGAllDungeons.Announce` | `1` | Notify the player when joining the LFG queue |
+
+---
+
+## In-game GM Commands
+
+| Command | Required level | Description |
+|---|---|---|
+| `.lfgall status` | Player | Display the current module status |
+| `.lfgall reload` | Administrator | Reload the configuration |
+| `.lfgall patch` | Administrator | Re-apply the SQL patch on `dungeon_access_template` |
+
+---
+
+## Compatibility
+
+- AzerothCore 3.x (WotLK 3.3.5a)
+- Compiler: C++17 or higher
+
+---
+
+## Restoring original restrictions
+
+To revert to Blizzard's original values, restore the `dungeon_access_template` table from your AzerothCore backup, or manually reset the `min_level` / `max_level` values.
+
+---
+
+## License
+
+MIT — free to use and modify.
