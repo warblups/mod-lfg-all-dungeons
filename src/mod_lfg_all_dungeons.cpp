@@ -5,7 +5,6 @@
 #include "Chat.h"
 #include "ChatCommand.h"
 #include "DatabaseEnv.h"
-#include "ObjectMgr.h"
 
 // ============================================================
 // mod-lfg-all-dungeons
@@ -13,12 +12,25 @@
 //               sans restriction de niveau min/max.
 // ============================================================
 
+using namespace Acore::ChatCommands;
+
 bool g_ModEnabled       = true;
 bool g_BypassLevelCheck = true;
 bool g_AnnounceOnJoin   = true;
 
 // ----------------------------------------------------------
-// Hook WorldScript : chargement config + patch BDD
+// Patch BDD
+// ----------------------------------------------------------
+static void ApplyPatch()
+{
+    WorldDatabase.Execute(
+        "UPDATE dungeon_access_template SET min_level = 1, max_level = 80"
+    );
+    LOG_INFO("module", "mod-lfg-all-dungeons : patch dungeon_access_template appliqué.");
+}
+
+// ----------------------------------------------------------
+// WorldScript : chargement config + patch au démarrage
 // ----------------------------------------------------------
 class LFGAllDungeonsWorldScript : public WorldScript
 {
@@ -42,25 +54,17 @@ public:
 
         ApplyPatch();
     }
-
-    static void ApplyPatch()
-    {
-        WorldDatabase.Execute(
-            "UPDATE dungeon_access_template SET min_level = 1, max_level = 80"
-        );
-        LOG_INFO("module", "mod-lfg-all-dungeons : patch dungeon_access_template appliqué.");
-    }
 };
 
 // ----------------------------------------------------------
-// Hook PlayerScript : message au joueur à la connexion
+// PlayerScript : message à la connexion
 // ----------------------------------------------------------
 class LFGAllDungeonsPlayerScript : public PlayerScript
 {
 public:
     LFGAllDungeonsPlayerScript() : PlayerScript("LFGAllDungeonsPlayerScript") {}
 
-    void OnLogin(Player* player) override
+    void OnPlayerLogin(Player* player) override
     {
         if (!g_ModEnabled || !g_AnnounceOnJoin || !player)
             return;
@@ -72,10 +76,8 @@ public:
 };
 
 // ----------------------------------------------------------
-// Commandes GM  .lfgall status / reload / patch
+// CommandScript : .lfgall status / reload / patch
 // ----------------------------------------------------------
-using namespace Acore::ChatCommands;
-
 class LFGAllDungeonsCommandScript : public CommandScript
 {
 public:
@@ -85,9 +87,9 @@ public:
     {
         static ChatCommandTable lfgAllSub =
         {
-            { "reload", HandleReload, RBACPermissions::RBAC_PERM_COMMAND_RELOAD_CONFIG, false },
-            { "patch",  HandlePatch,  RBACPermissions::RBAC_PERM_COMMAND_RELOAD_CONFIG, false },
-            { "status", HandleStatus, RBACPermissions::RBAC_PERM_COMMAND_ACCOUNT,       false },
+            { "reload", HandleReload, SEC_ADMINISTRATOR, Console::No  },
+            { "patch",  HandlePatch,  SEC_ADMINISTRATOR, Console::No  },
+            { "status", HandleStatus, SEC_PLAYER,        Console::No  },
         };
 
         static ChatCommandTable root =
@@ -116,7 +118,7 @@ public:
             return true;
         }
 
-        LFGAllDungeonsWorldScript::ApplyPatch();
+        ApplyPatch();
         handler->PSendSysMessage("|cff00ff00[LFGAll]|r Patch appliqué sur dungeon_access_template.");
         return true;
     }
