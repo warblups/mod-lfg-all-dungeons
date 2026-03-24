@@ -1,4 +1,10 @@
+[![Logo](https://raw.githubusercontent.com/azerothcore/azerothcore.github.io/master/images/logo-github.png)](https://azerothcore.org/)
+
 # mod-lfg-all-dungeons
+
+Latest build status with azerothcore:
+
+[![Build Status](https://github.com/warblups/mod-lfg-all-dungeons/actions/workflows/core-build.yml/badge.svg)](https://github.com/warblups/mod-lfg-all-dungeons/actions/workflows/core-build.yml)
 
 Module AzerothCore permettant l'accès à **tous les donjons via le système LFG (Looking For Group)** sans restriction de niveau minimum ou maximum.
 
@@ -90,11 +96,15 @@ MIT — libre d'utilisation et de modification.
 ---
 ---
 
-# English
-
 <a name="english"></a>
 
+[![Logo](https://raw.githubusercontent.com/azerothcore/azerothcore.github.io/master/images/logo-github.png)](https://azerothcore.org/)
+
 # mod-lfg-all-dungeons
+
+Latest build status with azerothcore:
+
+[![Build Status](https://github.com/warblups/mod-lfg-all-dungeons/actions/workflows/core-build.yml/badge.svg)](https://github.com/warblups/mod-lfg-all-dungeons/actions/workflows/core-build.yml)
 
 AzerothCore module that allows access to **all dungeons through the LFG (Looking For Group) system** regardless of the player's level.
 
