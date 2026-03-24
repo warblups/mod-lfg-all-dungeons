@@ -8,22 +8,13 @@
 -- CREATE TABLE IF NOT EXISTS `mod_lfg_backup` LIKE `lfg_dungeon_template`;
 -- INSERT INTO `mod_lfg_backup` SELECT * FROM `lfg_dungeon_template`;
 
--- Supprime les restrictions de niveau pour tous les types de donjons :
---   type 1 = DUNGEON (donjon normal)
---   type 2 = RAID
---   type 5 = HEROIC
---   type 6 = RANDOM DUNGEON
-UPDATE `lfg_dungeon_template`
-SET `minlevel` = 1,
-    `maxlevel` = 80
-WHERE `type` IN (1, 2, 5, 6);
-
--- Supprime les restrictions d'extension
-UPDATE `lfg_dungeon_template`
-SET `expansion` = 0
-WHERE `expansion` > 0;
+-- Supprime les restrictions de niveau min/max pour TOUS les donjons
+-- (Normal, Héroïque, Raid — difficulty 0 = normal, 1 = héroïque, etc.)
+UPDATE `dungeon_access_template`
+SET `min_level` = 1,
+    `max_level` = 80;
 
 -- Vérification rapide
-SELECT `id`, `name`, `type`, `minlevel`, `maxlevel`, `expansion`
-FROM `lfg_dungeon_template`
-ORDER BY `type`, `id`;
+SELECT `id`, `map_id`, `difficulty`, `min_level`, `max_level`, `min_avg_item_level`, `comment`
+FROM `dungeon_access_template`
+ORDER BY `map_id`, `difficulty`;

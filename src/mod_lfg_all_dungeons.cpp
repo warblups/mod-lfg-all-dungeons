@@ -90,26 +90,13 @@ private:
     {
         if (g_BypassLevelCheck)
         {
-            // Met le niveau minimum à 1 et le maximum à 80 pour tous les donjons LFG
+            // Remet min_level à 1 et max_level à 80 pour toutes les entrées
+            // de dungeon_access_template (toutes difficulties confondues)
             WorldDatabase.Execute(
-                "UPDATE lfg_dungeon_template SET minlevel = 1, maxlevel = 80 "
-                "WHERE type IN (1, 2, 5, 6)"   // DUNGEON, RAID, HEROIC, RANDOM
+                "UPDATE dungeon_access_template SET min_level = 1, max_level = 80"
             );
 
-            LOG_INFO("module", "mod-lfg-all-dungeons : niveaux min/max réinitialisés pour tous les donjons LFG.");
-        }
-
-        if (g_BypassExpansion)
-        {
-            // Retire la restriction d'expansion (expansion = -1 = toutes)
-            // La colonne expansion existe dans lfg_dungeon_template sur certains cores
-            // On entoure d'un try pour éviter un crash si la colonne n'existe pas
-            WorldDatabase.Execute(
-                "UPDATE lfg_dungeon_template SET expansion = 0 "
-                "WHERE expansion > 0"
-            );
-
-            LOG_INFO("module", "mod-lfg-all-dungeons : restrictions d'extension supprimées.");
+            LOG_INFO("module", "mod-lfg-all-dungeons : niveaux min/max réinitialisés dans dungeon_access_template.");
         }
     }
 };
@@ -179,15 +166,7 @@ public:
         if (g_BypassLevelCheck)
         {
             WorldDatabase.Execute(
-                "UPDATE lfg_dungeon_template SET minlevel = 1, maxlevel = 80 "
-                "WHERE type IN (1, 2, 5, 6)"
-            );
-        }
-
-        if (g_BypassExpansion)
-        {
-            WorldDatabase.Execute(
-                "UPDATE lfg_dungeon_template SET expansion = 0 WHERE expansion > 0"
+                "UPDATE dungeon_access_template SET min_level = 1, max_level = 80"
             );
         }
 
